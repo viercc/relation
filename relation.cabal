@@ -1,7 +1,7 @@
 name:                relation
 version:             0.1.0.0
 synopsis:            Data structure for Many-to-Many relation
--- description:         
+-- description:      
 homepage:            https://github.com/minkless/relation#readme
 license:             BSD3
 license-file:        LICENSE
@@ -32,7 +32,12 @@ test-suite relation-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
+  other-modules:       Common
   build-depends:       base
+                     , containers
                      , relation
-  ghc-options:         -Wall -O2 -threaded -rtsopts -with-rtsopts=-N
+                     , QuickCheck
+                     , hspec
+  ghc-options:         -Wall -fno-warn-orphans -O2 -threaded
+                       -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
