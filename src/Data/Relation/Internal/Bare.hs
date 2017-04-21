@@ -7,6 +7,7 @@ module Data.Relation.Internal.Bare(
   union_, difference_, intersection_,
   compose_, transpose_,
   firstMapMonotonic_, secondMapMonotonic_, filter_, partition_,
+  firstBind_, secondBind_,
   toList_, fromList_,
   toAscList_, fromAscList_, fromDistinctAscList_,
   toSet_, fromSet_, fromMap_
@@ -104,6 +105,17 @@ firstMapMonotonic_ = Map.mapKeysMonotonic
 -- O(n). The precondition is not checked.
 secondMapMonotonic_ :: (b -> b') -> Rel_ a b -> Rel_ a b'
 secondMapMonotonic_ f = Map.map (Set.mapMonotonic f)
+
+-- O(a \* b \* c), where a is the domSize of output.
+firstBind_ :: (Ord a, Ord b, Ord c) => (b -> Set a) -> Rel_ b c -> Rel_ a c
+firstBind_ f r = transpose_ fRel `compose_` r
+  where
+    fRel = Map.fromSet f (Map.keysSet r)
+
+-- O(a \* b \* c), where c is the codSize of output.
+secondBind_ :: (Ord b, Ord c) => Rel_ a b -> (b -> Set c) -> Rel_ a c
+secondBind_ r f = r `compose_` fRel
+  where fRel = Map.fromSet f (foldMap id r)
 
 -- O(n).
 filter_ :: (a -> b -> Bool) -> Rel_ a b -> Rel_ a b

@@ -16,6 +16,8 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Data.Relation,
+                       Data.Relation.Class,
+                       Data.Relation.Naive,
                        Data.Relation.Both,
                        Data.Relation.LTR,
                        Data.Relation.RTL
