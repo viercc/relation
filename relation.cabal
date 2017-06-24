@@ -1,7 +1,10 @@
+-- This file has been generated from package.yaml by hpack version 0.17.0.
+--
+-- see: https://github.com/sol/hpack
+
 name:                relation
 version:             0.1.0.0
 synopsis:            Data structure for Many-to-Many relation
--- description:      
 homepage:            https://github.com/minkless/relation#readme
 license:             BSD3
 license-file:        LICENSE
@@ -10,36 +13,49 @@ maintainer:          viercc@gmail.com
 copyright:           Koji Miyazato
 category:            Data Structures
 build-type:          Simple
-extra-source-files:  README.md
-cabal-version:       >=1.10
+cabal-version:       >= 1.10
+
+extra-source-files:
+    README.md
 
 library
-  hs-source-dirs:      src
-  exposed-modules:     Data.Relation,
-                       Data.Relation.Class,
-                       Data.Relation.Naive,
-                       Data.Relation.Both,
-                       Data.Relation.LTR,
-                       Data.Relation.RTL
-  other-modules:       Data.Relation.Internal.Bare,
-                       Data.Relation.Internal.LTR,
-                       Data.Relation.Internal.RTL,
-                       Data.Relation.Internal.Both
-  build-depends:       base >= 4.7 && < 5
-                     , containers
-  ghc-options:         -Wall -fwarn-redundant-constraints -O2
-  default-language:    Haskell2010
+  hs-source-dirs:
+      src
+  exposed-modules:
+      Data.Relation
+      Data.Relation.Class
+      Data.Relation.Naive
+      Data.Relation.Both
+      Data.Relation.LTR
+      Data.Relation.RTL
+  other-modules:
+      Data.Relation.Internal.Bare
+      Data.Relation.Internal.Both
+      Data.Relation.Internal.LTR
+      Data.Relation.Internal.RTL
+      Paths_relation
+  build-depends:
+      containers
+    , base >=4.7 && <5
+  ghc-options: -Wall -O2 -fwarn-redundant-constraints
+  default-language: Haskell2010
 
 test-suite relation-test
-  type:                exitcode-stdio-1.0
-  hs-source-dirs:      test
-  main-is:             Spec.hs
-  other-modules:       Common
-  build-depends:       base
-                     , containers
-                     , relation
-                     , QuickCheck
-                     , hspec
-  ghc-options:         -Wall -fno-warn-orphans -O2 -threaded
-                       -rtsopts -with-rtsopts=-N
-  default-language:    Haskell2010
+  type: exitcode-stdio-1.0
+  hs-source-dirs:
+      test
+  main-is: Spec.hs
+  other-modules:
+      Common
+      Data.Relation.BothSpec
+      Data.Relation.LTRSpec
+      Data.Relation.NaiveSpec
+      Data.Relation.RTLSpec
+  build-depends:
+      containers
+    , base
+    , relation
+    , QuickCheck
+    , hspec
+  ghc-options: -Wall -O2 -fno-warn-orphans -threaded -rtsopts -with-rtsopts=-N
+  default-language: Haskell2010
