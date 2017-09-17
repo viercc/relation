@@ -1,6 +1,7 @@
 module Data.Relation.Internal.Bare(
   -- * Internal representation
   Rel_,
+  showsPrec_,
   slice_, revslice_,
   size_, member_,
   insert_, delete_,
@@ -30,6 +31,10 @@ nonNullSet set = if Set.null set then Nothing else Just set
 
 normalize :: Rel_ a b -> Rel_ a b
 normalize = Map.mapMaybe nonNullSet
+
+showsPrec_ :: (Show a, Show b) => Int -> [(a, b)] -> ShowS
+showsPrec_ p r =
+  showParen (p > 10) $ ("fromList " ++) . showsPrec p r
 
 -- * Operations to Rel_
 
@@ -106,16 +111,13 @@ firstMapMonotonic_ = Map.mapKeysMonotonic
 secondMapMonotonic_ :: (b -> b') -> Rel_ a b -> Rel_ a b'
 secondMapMonotonic_ f = Map.map (Set.mapMonotonic f)
 
--- O(a \* b \* c), where a is the domSize of output.
-firstBind_ :: (Ord a, Ord b, Ord c) => (b -> Set a) -> Rel_ b c -> Rel_ a c
-firstBind_ f r = transpose_ fRel `compose_` r
-  where
-    fRel = Map.fromSet f (Map.keysSet r)
+-- O(a \* n), where a is the domSize of output.
+firstBind_ :: (Ord a, Ord c) => (b -> Set a) -> Rel_ b c -> Rel_ a c
+firstBind_ f r = transpose_ (secondBind_ (transpose_ r) f)
 
--- O(a \* b \* c), where c is the codSize of output.
-secondBind_ :: (Ord b, Ord c) => Rel_ a b -> (b -> Set c) -> Rel_ a c
-secondBind_ r f = r `compose_` fRel
-  where fRel = Map.fromSet f (foldMap id r)
+-- O(n \* c), where c is the codSize of output.
+secondBind_ :: (Ord c) => Rel_ a b -> (b -> Set c) -> Rel_ a c
+secondBind_ r f = Map.map (foldMap f) r
 
 -- O(n).
 filter_ :: (a -> b -> Bool) -> Rel_ a b -> Rel_ a b
