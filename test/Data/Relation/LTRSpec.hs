@@ -136,19 +136,19 @@ spec_compatibility =
         LTR.lookupR @A @B `eqv` Naive.lookupR @A @B
       it "dom" $
         LTR.dom @A @B `eqv` Naive.dom @A @B
-      it "cod" $
-        LTR.cod @A @B `eqv` Naive.cod @A @B
+      it "ran" $
+        LTR.ran @A @B `eqv` Naive.ran @A @B
       it "domSize" $
         LTR.domSize @A @B `eqv` Naive.domSize @A @B
-      it "codSize" $
-        LTR.codSize @A @B `eqv` Naive.codSize @A @B
+      it "ranSize" $
+        LTR.ranSize @A @B `eqv` Naive.ranSize @A @B
 
 -- # Properties of compose
 
 prop_compose_unit :: Rel A B -> Property
 prop_compose_unit r =
   let idA = identity (dom r)
-      idB = identity (cod r)
+      idB = identity (ran r)
   in (idA #.# r === r) .&&. (r #.# idB === r)
 
 prop_compose_empty :: Rel A B -> Property

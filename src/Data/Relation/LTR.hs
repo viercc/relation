@@ -4,7 +4,7 @@ module Data.Relation.LTR(
   Rel(),
   -- * Queries
   null, size, member,
-  lookupL, lookupR, dom, cod, domSize, codSize,
+  lookupL, lookupR, dom, ran, domSize, ranSize,
   -- * Construction
   empty, singleton, identity, full,
   -- * Relation-algebraic operation
@@ -45,7 +45,7 @@ null r = Map.null (impl r)
 -- | O(a)
 size :: Rel a b -> Int
 size r = size_ (impl r)
--- | O(log n)
+-- | O(log (a \* b))
 member :: (Ord a, Ord b) => a -> b -> Rel a b -> Bool
 member a b r = member_ a b (impl r)
 -- | O(log a)
@@ -57,15 +57,15 @@ lookupR r b = revslice_ (impl r) b
 -- | O(a)
 dom :: (Ord a) => Rel a b -> Set a
 dom r = Map.keysSet (impl r)
--- | O(n)
-cod :: (Ord b) => Rel a b -> Set b
-cod r = fold (impl r)
+-- | O(n \* log n)
+ran :: (Ord b) => Rel a b -> Set b
+ran r = fold (impl r)
 -- | O(1)
 domSize :: (Ord a) => Rel a b -> Int
 domSize r = Map.size (impl r)
--- | O(n)
-codSize :: (Ord b) => Rel a b -> Int
-codSize r = Set.size (cod r)
+-- | O(n \* log n)
+ranSize :: (Ord b) => Rel a b -> Int
+ranSize r = Set.size (ran r)
 
 -- * Construction
 
@@ -75,7 +75,7 @@ empty = Rel Map.empty
 -- | O(1)
 singleton :: a -> b -> Rel a b
 singleton a b = Rel (Map.singleton a (Set.singleton b))
--- | O(n)
+-- | O(a) (n == a)
 identity :: Set a -> Rel a a
 identity as = Rel (Map.fromSet (Set.singleton) as)
 -- | O(a)
@@ -84,13 +84,28 @@ full as bs = Rel (Map.fromSet (const bs) as)
 
 -- * Relation-algebraic operation
 
--- | O(n)
+-- | O(a_min \* log a_max + n \* log b_max)
+--
+--   > where a_min = min a1 a2
+--   >       a_max = max a1 a2
+--   >       b_max = max b1 b2
+--   >       n = n1 + n2
 union :: (Ord a, Ord b) => Rel a b -> Rel a b -> Rel a b
 union (Rel r) (Rel s) = Rel (union_ r s)
--- | O(n)
+-- | O(a_min \* log a_max + n \* log b_max)
+--
+--   > where a_min = min a1 a2
+--   >       a_max = max a1 a2
+--   >       b_max = max b1 b2
+--   >       n = n1 + n2
 difference :: (Ord a, Ord b) => Rel a b -> Rel a b -> Rel a b
 difference (Rel r) (Rel s) = Rel (difference_ r s)
--- | O(n)
+-- | O(a_min \* log a_max + n \* log b_max)
+--
+--   > where a_min = min a1 a2
+--   >       a_max = max a1 a2
+--   >       b_max = max b1 b2
+--   >       n = n1 + n2
 intersection :: (Ord a, Ord b) => Rel a b -> Rel a b -> Rel a b
 intersection (Rel r) (Rel s) = Rel (intersection_ r s)
 -- | O(a \* (b + b') \* c)
@@ -122,7 +137,7 @@ infix 6 #.
 
 -- | Returns the unions of @a .# r@, for each element @a@ in given set.
 (-.#) :: (Ord a, Ord b) => Set a -> Rel a b -> Set b
-as -.# r = cod (as' #.# r)
+as -.# r = ran (as' #.# r)
   where
     as' = full (Set.singleton ()) as
 

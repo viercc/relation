@@ -1,7 +1,3 @@
--- This file has been generated from package.yaml by hpack version 0.17.1.
---
--- see: https://github.com/sol/hpack
-
 name:                relation
 version:             0.1.0.1
 synopsis:            Data structure for Many-to-Many relation
@@ -23,7 +19,6 @@ library
       src
   exposed-modules:
       Data.Relation
-      Data.Relation.Naive
       Data.Relation.LTR
   other-modules:
       Data.Relation.Internal.Bare
@@ -40,6 +35,7 @@ test-suite relation-test
   main-is: Spec.hs
   other-modules:
       Data.Relation.LTRSpec
+      Data.Relation.Naive
   build-depends:
       containers
     , base

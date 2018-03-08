@@ -4,7 +4,7 @@ module Data.Relation.Naive(
   NaiveRel(..),
   -- * Queries
   null, size, member,
-  lookupL, lookupR, dom, cod, domSize, codSize,
+  lookupL, lookupR, dom, ran, domSize, ranSize,
   -- * Construction
   empty, singleton, identity, full,
   -- * Relation-algebraic operation
@@ -32,46 +32,33 @@ newtype NaiveRel a b = NaiveRel { impl :: Set (a,b) }
 
 -- * Queries
 
--- | O(1)
 null :: NaiveRel a b -> Bool
 null r = Set.null (impl r)
--- | O(a)
 size :: NaiveRel a b -> Int
 size r = Set.size (impl r)
--- | O(log n)
 member :: (Ord a, Ord b) => a -> b -> NaiveRel a b -> Bool
 member a b r = Set.member (a,b) (impl r)
--- | O(log a)
 lookupL :: (Ord a, Ord b) => a -> NaiveRel a b -> Set b
 lookupL a r = Set.mapMonotonic snd $ Set.filter ((a ==) . fst) $ impl r
--- | O(a \* log b)
 lookupR :: (Ord a, Ord b) => NaiveRel a b -> b -> Set a
 lookupR r b = Set.mapMonotonic fst $ Set.filter ((b ==) . snd) $ impl r
--- | O(a)
 dom :: (Ord a) => NaiveRel a b -> Set a
 dom r = Set.map fst (impl r)
--- | O(n)
-cod :: (Ord b) => NaiveRel a b -> Set b
-cod r = Set.map snd (impl r)
--- | O(1)
+ran :: (Ord b) => NaiveRel a b -> Set b
+ran r = Set.map snd (impl r)
 domSize :: (Ord a) => NaiveRel a b -> Int
 domSize r = Set.size (dom r)
--- | O(n)
-codSize :: (Ord b) => NaiveRel a b -> Int
-codSize r = Set.size (cod r)
+ranSize :: (Ord b) => NaiveRel a b -> Int
+ranSize r = Set.size (ran r)
 
 -- * Construction
 
--- | O(1)
 empty :: NaiveRel a b
 empty = NaiveRel Set.empty
--- | O(1)
 singleton :: a -> b -> NaiveRel a b
 singleton a b = NaiveRel (Set.singleton (a,b))
--- | O(n)
 identity :: Set a -> NaiveRel a a
 identity as = NaiveRel (Set.mapMonotonic (\a -> (a,a)) as)
--- | O(a)
 full :: Set a -> Set b -> NaiveRel a b
 full as bs = NaiveRel $ Set.fromDistinctAscList ps
   where
@@ -79,21 +66,16 @@ full as bs = NaiveRel $ Set.fromDistinctAscList ps
 
 -- * NaiveRelation-algebraic operation
 
--- | O(n)
 union :: (Ord a, Ord b) => NaiveRel a b -> NaiveRel a b -> NaiveRel a b
 union (NaiveRel r) (NaiveRel s) = NaiveRel (Set.union r s)
--- | O(n)
 difference :: (Ord a, Ord b) => NaiveRel a b -> NaiveRel a b -> NaiveRel a b
 difference (NaiveRel r) (NaiveRel s) = NaiveRel (Set.difference r s)
--- | O(n)
 intersection :: (Ord a, Ord b) => NaiveRel a b -> NaiveRel a b -> NaiveRel a b
 intersection (NaiveRel r) (NaiveRel s) = NaiveRel (Set.intersection r s)
--- | O(a \* (b + b') \* c)
 compose :: (Ord a, Ord b, Ord c) => NaiveRel a b -> NaiveRel b c -> NaiveRel a c
 compose (NaiveRel r) (NaiveRel s) = NaiveRel (Set.fromList t)
   where
     t = [ (a,c) | (a,b) <- Set.toAscList r, (b',c) <- Set.toAscList s, b==b' ]
--- | O(n \* log a)
 transpose :: (Ord a, Ord b) => NaiveRel a b -> NaiveRel b a
 transpose (NaiveRel r) = NaiveRel $ Set.map swap r
   where
@@ -121,7 +103,7 @@ infix 6 #.
 
 -- | Returns the unions of @a .# r@, for each element @a@ in given set.
 (-.#) :: (Ord a, Ord b) => Set a -> NaiveRel a b -> Set b
-as -.# r = cod (as' #.# r)
+as -.# r = ran (as' #.# r)
   where
     as' = full (Set.singleton ()) as
 
@@ -180,33 +162,23 @@ partition p (NaiveRel r) =
 
 -- * Conversion
 
--- | O(n)
 fromSet :: (Ord a, Ord b) => Set (a,b) -> NaiveRel a b
 fromSet = NaiveRel
 
--- | O(n)
 toSet :: (Ord a, Ord b) => NaiveRel a b -> Set (a,b)
 toSet = impl
 
--- | O(n \* log n).
---   Converts from a list of pairs.
 fromList :: (Ord a, Ord b) => [(a,b)] -> NaiveRel a b
 fromList = NaiveRel . Set.fromList
 
--- | Converts to a list of pairs, through @Set (a,b)@.
 toList :: NaiveRel a b -> [(a,b)]
 toList = Set.toList . impl
 
--- | O(n). Convert from sorted list.
---   The precondition is not checked.
 fromAscList :: (Eq a, Eq b) => [(a,b)] -> NaiveRel a b
 fromAscList = NaiveRel . Set.fromAscList
 
--- | O(n). Convert from sorted, distinct list.
---   The precondition is not checked.
 fromDistinctAscList :: [(a,b)] -> NaiveRel a b
 fromDistinctAscList = NaiveRel . Set.fromDistinctAscList
 
--- | O(n).
 toAscList :: NaiveRel a b -> [(a,b)]
 toAscList (NaiveRel r) = Set.toAscList r
