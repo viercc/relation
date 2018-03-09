@@ -84,28 +84,13 @@ full as bs = Rel (Map.fromSet (const bs) as)
 
 -- * Relation-algebraic operation
 
--- | O(a_min \* log a_max + n \* log b_max)
---
---   > where a_min = min a1 a2
---   >       a_max = max a1 a2
---   >       b_max = max b1 b2
---   >       n = n1 + n2
+-- | O(n1 + n2)
 union :: (Ord a, Ord b) => Rel a b -> Rel a b -> Rel a b
 union (Rel r) (Rel s) = Rel (union_ r s)
--- | O(a_min \* log a_max + n \* log b_max)
---
---   > where a_min = min a1 a2
---   >       a_max = max a1 a2
---   >       b_max = max b1 b2
---   >       n = n1 + n2
+-- | O(n1 + n2)
 difference :: (Ord a, Ord b) => Rel a b -> Rel a b -> Rel a b
 difference (Rel r) (Rel s) = Rel (difference_ r s)
--- | O(a_min \* log a_max + n \* log b_max)
---
---   > where a_min = min a1 a2
---   >       a_max = max a1 a2
---   >       b_max = max b1 b2
---   >       n = n1 + n2
+-- | O(n1 + n2)
 intersection :: (Ord a, Ord b) => Rel a b -> Rel a b -> Rel a b
 intersection (Rel r) (Rel s) = Rel (intersection_ r s)
 -- | O(a \* (b + b') \* c)
