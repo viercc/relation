@@ -2,7 +2,7 @@ module Data.Relation.Internal.Bare(
   -- * Internal representation
   Rel_,
   showsPrec_,
-  slice_, revslice_,
+  slice_, sliceSet_, revslice_,
   size_, member_,
   insert_, delete_,
   union_, difference_, intersection_,
@@ -13,8 +13,6 @@ module Data.Relation.Internal.Bare(
   toAscList_, fromAscList_, fromDistinctAscList_,
   toSet_, fromSet_, fromMap_
 ) where
-
-import           Prelude         hiding (null)
 
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
@@ -40,12 +38,21 @@ showsPrec_ p r =
 
 -- O(log a)
 slice_ :: (Ord a) => a -> Rel_ a b -> Set b
-slice_ a r = Map.findWithDefault Set.empty a r
+slice_ = Map.findWithDefault Set.empty
+
+-- O
+sliceSet_ :: (Ord a, Ord b) => Set a -> Rel_ a b -> Set b
+sliceSet_ as r
+  | Set.size as <= 100 =
+      foldMap (`slice_` r) as
+  | otherwise =
+      Set.unions . Map.elems $
+        Map.intersectionWith const r (Map.fromSet id as)
 
 -- O(a * log b)
 revslice_ :: (Ord b) => Rel_ a b -> b -> Set a
 revslice_ r b =
-  Set.fromDistinctAscList $
+  Set.fromDistinctAscList
     [a | (a, r_a) <- Map.toAscList r,
          b `Set.member` r_a ]
 
@@ -68,11 +75,11 @@ delete_ a b = Map.update deletingB a
 
 -- O(n)
 union_ :: (Ord a, Ord b) => Rel_ a b -> Rel_ a b -> Rel_ a b
-union_ r s = Map.unionWith Set.union r s
+union_ = Map.unionWith Set.union
 
 -- O(n)
 difference_ :: (Ord a, Ord b) => Rel_ a b -> Rel_ a b -> Rel_ a b
-difference_ r s = Map.differenceWith diff r s
+difference_ = Map.differenceWith diff
   where
     diff r_a s_a = nonNullSet (r_a \\ s_a)
 
@@ -80,17 +87,16 @@ difference_ r s = Map.differenceWith diff r s
 intersection_ :: (Ord a, Ord b) => Rel_ a b -> Rel_ a b -> Rel_ a b
 intersection_ r s = normalize $ Map.intersectionWith Set.intersection r s
 
--- O(a*(b+b')*c').
+-- O(n+a*b'*c'*log b').
 compose_ :: (Ord b, Ord c) => Rel_ a b -> Rel_ b c -> Rel_ a c
 compose_ r s =
-  Map.mapMaybe (nonNullSet . foldMap (\b -> slice_ b s)) r
+  Map.mapMaybe (nonNullSet . (`sliceSet_` s)) r
 
 -- O(log a * n).
 transpose_ :: (Ord b) => Rel_ a b -> Rel_ b a
 transpose_ r = fromDistinctAscList_ $
                mergeSort (comparing fst) $
-               fmap tr1 $
-               Map.toAscList r
+               tr1 <$> Map.toAscList r
   where
     tr1 (a, bs) = fmap (\b -> (b,a)) (Set.toAscList bs)
 
@@ -126,7 +132,7 @@ filter_ p = Map.mapMaybeWithKey (\a -> nonNullSet . Set.filter (p a))
 -- O(n).
 partition_ :: (a -> b -> Bool) -> Rel_ a b -> (Rel_ a b, Rel_ a b)
 partition_ p r =
-  let parts = Map.mapWithKey (\a -> Set.partition (p a)) r
+  let parts = Map.mapWithKey (Set.partition . p) r
       r1 = normalize $ Map.map fst parts
       r2 = normalize $ Map.map snd parts
   in (r1, r2)

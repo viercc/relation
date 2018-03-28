@@ -39,7 +39,11 @@ size r = Set.size (impl r)
 member :: (Ord a, Ord b) => a -> b -> NaiveRel a b -> Bool
 member a b r = Set.member (a,b) (impl r)
 lookupL :: (Ord a, Ord b) => a -> NaiveRel a b -> Set b
-lookupL a r = Set.mapMonotonic snd $ Set.filter ((a ==) . fst) $ impl r
+lookupL a r =
+  Set.mapMonotonic snd $
+  Set.takeWhileAntitone ((<= a) . fst) $
+  Set.dropWhileAntitone ((< a) . fst) $
+  impl r
 lookupR :: (Ord a, Ord b) => NaiveRel a b -> b -> Set a
 lookupR r b = Set.mapMonotonic fst $ Set.filter ((b ==) . snd) $ impl r
 dom :: (Ord a) => NaiveRel a b -> Set a
@@ -64,7 +68,7 @@ full as bs = NaiveRel $ Set.fromDistinctAscList ps
   where
     ps = [ (a,b) | a <- Set.toAscList as, b <- Set.toAscList bs ]
 
--- * NaiveRelation-algebraic operation
+-- * Relation-algebraic operation
 
 union :: (Ord a, Ord b) => NaiveRel a b -> NaiveRel a b -> NaiveRel a b
 union (NaiveRel r) (NaiveRel s) = NaiveRel (Set.union r s)

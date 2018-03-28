@@ -77,7 +77,7 @@ singleton :: a -> b -> Rel a b
 singleton a b = Rel (Map.singleton a (Set.singleton b))
 -- | O(a) (n == a)
 identity :: Set a -> Rel a a
-identity as = Rel (Map.fromSet (Set.singleton) as)
+identity as = Rel (Map.fromSet Set.singleton as)
 -- | O(a)
 full :: Set a -> Set b -> Rel a b
 full as bs = Rel (Map.fromSet (const bs) as)
@@ -93,9 +93,16 @@ difference (Rel r) (Rel s) = Rel (difference_ r s)
 -- | O(n1 + n2)
 intersection :: (Ord a, Ord b) => Rel a b -> Rel a b -> Rel a b
 intersection (Rel r) (Rel s) = Rel (intersection_ r s)
--- | O(a \* (b + b') \* c)
+-- | O(n + a \* b' \* c' \* log b')
+--
+--   where
+--   >   n = size r
+--   >   a = domSize r
+--   >   b' = domSize s
+--   >   c' = ranSize s
 compose :: (Ord a, Ord b, Ord c) => Rel a b -> Rel b c -> Rel a c
 compose (Rel r) (Rel s) = Rel (compose_ r s)
+
 -- | O(n \* log a)
 transpose :: (Ord a, Ord b) => Rel a b -> Rel b a
 transpose (Rel r) = Rel (transpose_ r)
