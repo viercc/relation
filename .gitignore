@@ -19,3 +19,6 @@ cabal.sandbox.config
 
 # hasktags file
 TAGS
+
+# generated data
+benchdata/

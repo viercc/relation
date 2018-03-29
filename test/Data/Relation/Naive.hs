@@ -84,7 +84,9 @@ intersection (NaiveRel r) (NaiveRel s) = NaiveRel (Set.intersection r s)
 compose :: (Ord a, Ord b, Ord c) => NaiveRel a b -> NaiveRel b c -> NaiveRel a c
 compose (NaiveRel r) (NaiveRel s) = NaiveRel (Set.fromList t)
   where
-    t = [ (a,c) | (a,b) <- Set.toAscList r, (b',c) <- Set.toAscList s, b==b' ]
+    t = [ (a,c) | (a,b) <- Set.toAscList r,
+                  (_,c) <- lookupFst b $ Set.toAscList s ]
+    lookupFst b = takeWhile ((== b).fst) . dropWhile ((/= b).fst)
 transpose :: (Ord a, Ord b) => NaiveRel a b -> NaiveRel b a
 transpose (NaiveRel r) = NaiveRel $ Set.map swap r
   where
