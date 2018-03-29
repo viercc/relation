@@ -38,11 +38,6 @@ data DataSet =
 
 instance NFData DataSet
 
-instance (NFData a, NFData b) => NFData (Rel a b) where
-  rnf r = rnf (LTR.toList r)
-instance (NFData a, NFData b) => NFData (NaiveRel a b) where
-  rnf r = rnf (Naive.impl r)
-
 type DataSetFor r = (DataSet, r, r, r, r, r)
 
 genDataSet :: Int -> IO DataSet

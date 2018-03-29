@@ -31,11 +31,16 @@ import qualified Data.Set                    as Set
 
 import           Data.Relation.Internal.Bare
 
+import           Control.DeepSeq
+
 newtype Rel a b = Rel { impl :: Rel_ a b }
                 deriving (Eq, Ord)
 
 instance (Show a, Show b) => Show (Rel a b) where
     showsPrec p (Rel r) = showsPrec_ p (toList_ r)
+
+instance (NFData a, NFData b) => NFData (Rel a b) where
+  rnf r = rnf (impl r)
 
 -- * Queries
 

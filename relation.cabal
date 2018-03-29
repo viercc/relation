@@ -22,9 +22,9 @@ library
       Data.Relation.LTR
   other-modules:
       Data.Relation.Internal.Bare
-  build-depends:
-      containers
-    , base >=4.9 && <5
+  build-depends: base >=4.9 && <5
+               , containers >=0.5.10.1
+               , deepseq
   ghc-options: -Wall -O2 -fwarn-redundant-constraints
   default-language: Haskell2010
 
@@ -36,12 +36,12 @@ test-suite relation-test
   other-modules:
       Data.Relation.LTRSpec
       Data.Relation.Naive
-  build-depends:
-      base
-    , containers >=0.5.10.1
-    , relation
-    , QuickCheck
-    , hspec
+  build-depends: base
+               , containers >=0.5.10.1
+               , relation
+               , QuickCheck
+               , hspec
+               , deepseq
   ghc-options: -Wall -O2 -fno-warn-orphans -threaded -rtsopts -with-rtsopts=-N
   default-language: Haskell2010
 

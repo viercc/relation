@@ -27,8 +27,13 @@ import qualified Data.Set      as Set
 
 import           Control.Arrow (first, second)
 
+import           Control.DeepSeq
+
 newtype NaiveRel a b = NaiveRel { impl :: Set (a,b) }
   deriving (Show, Eq, Ord)
+
+instance (NFData a, NFData b) => NFData (NaiveRel a b) where
+  rnf r = rnf (impl r)
 
 -- * Queries
 
