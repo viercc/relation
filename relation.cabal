@@ -1,5 +1,5 @@
 name:                relation
-version:             0.1.0.1
+version:             0.1.0.2
 synopsis:            Data structure for Many-to-Many relation
 homepage:            https://github.com/minkless/relation#readme
 license:             BSD3
