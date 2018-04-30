@@ -14,20 +14,18 @@ module Data.Relation.Internal.Bare(
   toSet_, fromSet_, fromMap_
 ) where
 
-import           Data.Map.Strict (Map)
-import qualified Data.Map.Strict as Map
+import           Data.Map.Strict       (Map)
+import qualified Data.Map.Strict       as Map
+import           Data.Map.Merge.Strict
 import           Data.Monoid
-import           Data.Set        (Set, (\\))
-import qualified Data.Set        as Set
+import           Data.Set              (Set, (\\))
+import qualified Data.Set              as Set
 
 -- | internal representation of relation
 type Rel_ a b = Map a (Set b)
 
 nonNullSet :: Set a -> Maybe (Set a)
 nonNullSet set = if Set.null set then Nothing else Just set
-
-normalize :: Rel_ a b -> Rel_ a b
-normalize = Map.mapMaybe nonNullSet
 
 showsPrec_ :: (Show a, Show b) => Int -> [(a, b)] -> ShowS
 showsPrec_ p r =
@@ -84,14 +82,16 @@ difference_ = Map.differenceWith diff
 
 -- O(n).
 intersection_ :: (Ord a, Ord b) => Rel_ a b -> Rel_ a b -> Rel_ a b
-intersection_ r s = normalize $ Map.intersectionWith Set.intersection r s
+intersection_ =
+  merge dropMissing
+        dropMissing
+        (zipWithMaybeMatched (\_ bs bs' -> nonNullSet (Set.intersection bs bs')))
 
 -- O(n+a*b'*c'*log b').
 compose_ :: (Ord b, Ord c) => Rel_ a b -> Rel_ b c -> Rel_ a c
 compose_ r s =
   Map.mapMaybe (nonNullSet . (`sliceSet_` s)) r
 
--- O(log a * n).
 transpose_ :: (Ord b) => Rel_ a b -> Rel_ b a
 transpose_ r =
   Map.map (Set.fromDistinctAscList . ($ [])) $
@@ -133,8 +133,8 @@ filter_ p = Map.mapMaybeWithKey (\a -> nonNullSet . Set.filter (p a))
 partition_ :: (a -> b -> Bool) -> Rel_ a b -> (Rel_ a b, Rel_ a b)
 partition_ p r =
   let parts = Map.mapWithKey (Set.partition . p) r
-      r1 = normalize $ Map.map fst parts
-      r2 = normalize $ Map.map snd parts
+      r1 = Map.mapMaybe (nonNullSet . fst) parts
+      r2 = Map.mapMaybe (nonNullSet . snd) parts
   in (r1, r2)
 
 -- * Conversion

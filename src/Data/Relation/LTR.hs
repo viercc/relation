@@ -58,7 +58,7 @@ lookupL :: (Ord a, Ord b) => a -> Rel a b -> Set b
 lookupL a r = slice_ a (impl r)
 -- | O(a \* log b)
 lookupR :: (Ord a, Ord b) => Rel a b -> b -> Set a
-lookupR r b = revslice_ (impl r) b
+lookupR r = revslice_ (impl r)
 -- | O(a)
 dom :: (Ord a) => Rel a b -> Set a
 dom r = Map.keysSet (impl r)
@@ -108,7 +108,6 @@ intersection (Rel r) (Rel s) = Rel (intersection_ r s)
 compose :: (Ord a, Ord b, Ord c) => Rel a b -> Rel b c -> Rel a c
 compose (Rel r) (Rel s) = Rel (compose_ r s)
 
--- | O(n \* log a)
 transpose :: (Ord a, Ord b) => Rel a b -> Rel b a
 transpose (Rel r) = Rel (transpose_ r)
 
@@ -166,11 +165,9 @@ firstMapMonotonic f = Rel . firstMapMonotonic_ f . impl
 secondMapMonotonic :: (b -> b') -> Rel a b -> Rel a b'
 secondMapMonotonic f = Rel . secondMapMonotonic_ f . impl
 
--- O(a \* n), where a is the domSize of output.
 firstBind :: (Ord a, Ord b, Ord c) => (b -> Set a) -> Rel b c -> Rel a c
 firstBind f (Rel r) = Rel (firstBind_ f r)
 
--- O(n \* c), where c is the codSize of output.
 secondBind :: (Ord c) => Rel a b -> (b -> Set c) -> Rel a c
 secondBind (Rel r) f = Rel (secondBind_ r f)
 
