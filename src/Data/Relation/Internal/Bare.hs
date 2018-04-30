@@ -17,7 +17,6 @@ module Data.Relation.Internal.Bare(
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import           Data.Monoid
-import           Data.Ord        (comparing)
 import           Data.Set        (Set, (\\))
 import qualified Data.Set        as Set
 
@@ -94,11 +93,12 @@ compose_ r s =
 
 -- O(log a * n).
 transpose_ :: (Ord b) => Rel_ a b -> Rel_ b a
-transpose_ r = fromDistinctAscList_ $
-               mergeSort (comparing fst) $
-               tr1 <$> Map.toAscList r
+transpose_ r =
+  Map.map (Set.fromDistinctAscList . ($ [])) $
+  Map.unionsWith (.) $
+  tr1 <$> Map.toAscList r
   where
-    tr1 (a, bs) = fmap (\b -> (b,a)) (Set.toAscList bs)
+    tr1 (a, bs) = Map.fromSet (const (a:)) bs
 
 -- * Map/Filter
 --
@@ -175,24 +175,6 @@ fromMap_ :: Map a b -> Rel_ a b
 fromMap_ = Map.map Set.singleton
 
 -- * Utility
-
-mergeSort :: (a -> a -> Ordering) -> [[a]] -> [a]
-mergeSort cmp = sort'
-  where
-    sort' []   = []
-    sort' [ps] = ps
-    sort' pss  = sort' (pairs pss)
-
-    pairs (ps:qs:rest) = merge ps qs : pairs rest
-    pairs pss          = pss
-
-    merge ps [] = ps
-    merge [] qs = qs
-    merge (p:ps) (q:qs) =
-      case cmp p q of
-        LT -> p : merge ps (q:qs)
-        EQ -> p : merge ps (q:qs)
-        GT -> q : merge (p:ps) qs
 
 group' :: (Eq a) => [(a,b)] -> [(a,[b])]
 group' [] = []
