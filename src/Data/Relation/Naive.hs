@@ -28,6 +28,7 @@ import qualified Data.Set      as Set
 import           Control.Arrow (first, second)
 
 import           Control.DeepSeq
+import Control.Monad (guard)
 
 newtype NaiveRel a b = NaiveRel { impl :: Set (a,b) }
   deriving (Show, Eq, Ord)
@@ -39,24 +40,34 @@ instance (NFData a, NFData b) => NFData (NaiveRel a b) where
 
 null :: NaiveRel a b -> Bool
 null r = Set.null (impl r)
+
 size :: NaiveRel a b -> Int
 size r = Set.size (impl r)
+
 member :: (Ord a, Ord b) => a -> b -> NaiveRel a b -> Bool
 member a b r = Set.member (a,b) (impl r)
+
 lookupL :: (Ord a, Ord b) => a -> NaiveRel a b -> Set b
-lookupL a r =
-  Set.mapMonotonic snd $
-  Set.takeWhileAntitone ((<= a) . fst) $
-  Set.dropWhileAntitone ((< a) . fst) $
-  impl r
+lookupL a r = Set.fromList $ do
+  (a', b') <- Set.toList (impl r)
+  guard (a == a')
+  return b'
+
 lookupR :: (Ord a, Ord b) => NaiveRel a b -> b -> Set a
-lookupR r b = Set.mapMonotonic fst $ Set.filter ((b ==) . snd) $ impl r
+lookupR r b =Set.fromList $ do
+  (a', b') <- Set.toList (impl r)
+  guard (b == b')
+  return a'
+
 dom :: (Ord a) => NaiveRel a b -> Set a
 dom r = Set.map fst (impl r)
+
 ran :: (Ord b) => NaiveRel a b -> Set b
 ran r = Set.map snd (impl r)
+
 domSize :: (Ord a) => NaiveRel a b -> Int
 domSize r = Set.size (dom r)
+
 ranSize :: (Ord b) => NaiveRel a b -> Int
 ranSize r = Set.size (ran r)
 
@@ -75,18 +86,19 @@ full as bs = NaiveRel $ Set.fromDistinctAscList ps
 
 -- * Relation-algebraic operation
 
-union :: (Ord a, Ord b) => NaiveRel a b -> NaiveRel a b -> NaiveRel a b
+union, difference, intersection
+  :: (Ord a, Ord b) => NaiveRel a b -> NaiveRel a b -> NaiveRel a b
 union (NaiveRel r) (NaiveRel s) = NaiveRel (Set.union r s)
-difference :: (Ord a, Ord b) => NaiveRel a b -> NaiveRel a b -> NaiveRel a b
 difference (NaiveRel r) (NaiveRel s) = NaiveRel (Set.difference r s)
-intersection :: (Ord a, Ord b) => NaiveRel a b -> NaiveRel a b -> NaiveRel a b
 intersection (NaiveRel r) (NaiveRel s) = NaiveRel (Set.intersection r s)
+
 compose :: (Ord a, Ord b, Ord c) => NaiveRel a b -> NaiveRel b c -> NaiveRel a c
-compose (NaiveRel r) (NaiveRel s) = NaiveRel (Set.fromList t)
-  where
-    t = [ (a,c) | (a,b) <- Set.toAscList r,
-                  (_,c) <- lookupFst b $ Set.toAscList s ]
-    lookupFst b = takeWhile ((== b).fst) . dropWhile ((/= b).fst)
+compose (NaiveRel r) (NaiveRel s) = NaiveRel . Set.fromList $ do
+  (a, b) <- Set.toAscList r
+  (b', c) <- Set.toAscList s
+  guard (b == b')
+  return (a, c)
+
 transpose :: (Ord a, Ord b) => NaiveRel a b -> NaiveRel b a
 transpose (NaiveRel r) = NaiveRel $ Set.map swap r
   where

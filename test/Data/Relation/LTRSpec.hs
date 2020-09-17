@@ -98,7 +98,7 @@ instance (Show a, Eq a) => Eqv (Set a) (Set a)
 -- # Equivalence to naive implementation
 
 prop_naive_bijection :: NaiveRel A B -> Rel A B -> Property
-prop_naive_bijection naive r = isBijection fromNaive toNaive naive r
+prop_naive_bijection naive r = isBijection from to naive r
 
 spec_compatibility :: Spec
 spec_compatibility =
